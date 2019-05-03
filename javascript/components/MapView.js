@@ -47,6 +47,13 @@ class MapView extends React.Component {
     centerCoordinate: PropTypes.arrayOf(PropTypes.number),
 
     /**
+     * Initial bounds on map [[lng, lat], [lng, lat]]
+     */
+    visibleCoordinateBounds: PropTypes.arrayOf(
+      PropTypes.arrayOf(PropTypes.number),
+    ),
+
+    /**
      * Shows the users location on the map
      */
     showUserLocation: PropTypes.bool,
@@ -302,14 +309,14 @@ class MapView extends React.Component {
   }
 
   componentDidMount() {
-    this.setHandledMapChangedEvents(this.props);
+    this._setHandledMapChangedEvents(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setHandledMapChangedEvents(nextProps);
+    this._setHandledMapChangedEvents(nextProps);
   }
 
-  setHandledMapChangedEvents(props) {
+  _setHandledMapChangedEvents(props) {
     if (isAndroid()) {
       const events = [];
 
@@ -468,10 +475,6 @@ class MapView extends React.Component {
     padding = 0,
     duration = 0.0,
   ) {
-    if (!this._nativeRef) {
-      return;
-    }
-
     const pad = {
       paddingLeft: 0,
       paddingRight: 0,
@@ -521,9 +524,6 @@ class MapView extends React.Component {
    *  @return {void}
    */
   flyTo(coordinates, duration = 2000) {
-    if (!this._nativeRef) {
-      return Promise.reject(new Error('No native reference found'));
-    }
     return this.setCamera({
       centerCoordinate: coordinates,
       duration,
@@ -543,9 +543,6 @@ class MapView extends React.Component {
    *  @return {void}
    */
   moveTo(coordinates, duration = 0) {
-    if (!this._nativeRef) {
-      return Promise.reject(new Error('No native reference found'));
-    }
     return this.setCamera({
       centerCoordinate: coordinates,
       duration,
@@ -564,9 +561,6 @@ class MapView extends React.Component {
    * @return {void}
    */
   zoomTo(zoomLevel, duration = 2000) {
-    if (!this._nativeRef) {
-      return Promise.reject(new Error('No native reference found'));
-    }
     return this.setCamera({
       zoom: zoomLevel,
       duration,
@@ -594,10 +588,6 @@ class MapView extends React.Component {
    *  @param {Object} config - Camera configuration
    */
   setCamera(config = {}) {
-    if (!this._nativeRef) {
-      return;
-    }
-
     let cameraConfig = {};
 
     if (config.stops) {
@@ -648,6 +638,14 @@ class MapView extends React.Component {
   async getCenter() {
     const res = await this._runNativeCommand('getCenter');
     return res.center;
+  }
+
+  /**
+   * Show the attribution and telemetry action sheet.
+   * If you implement a custom attribution button, you should add this action to the button.
+   */
+  showAttribution() {
+    return this._runNativeCommand('showAttribution');
   }
 
   _runNativeCommand(methodName, args = []) {
@@ -839,6 +837,18 @@ class MapView extends React.Component {
     return toJSONString(makePoint(this.props.centerCoordinate));
   }
 
+  _getVisibleCoordinateBounds() {
+    if (!this.props.visibleCoordinateBounds) {
+      return;
+    }
+    return toJSONString(
+      makeLatLngBounds(
+        this.props.visibleCoordinateBounds[0],
+        this.props.visibleCoordinateBounds[1],
+      ),
+    );
+  }
+
   _getContentInset() {
     if (!this.props.contentInset) {
       return;
@@ -871,6 +881,7 @@ class MapView extends React.Component {
     const props = {
       ...this.props,
       centerCoordinate: this._getCenterCoordinate(),
+      visibleCoordinateBounds: this._getVisibleCoordinateBounds(),
       contentInset: this._getContentInset(),
       style: styles.matchParent,
     };

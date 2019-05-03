@@ -9,12 +9,14 @@ import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.LayoutShadowNode;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.annotations.ReactProp;
+import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.rctmgl.components.AbstractEventEmitter;
 import com.mapbox.rctmgl.events.constants.EventKeys;
 import com.mapbox.rctmgl.utils.ConvertUtils;
 import com.mapbox.rctmgl.utils.FilterParser;
 import com.mapbox.rctmgl.utils.GeoJSONUtils;
+import com.mapbox.services.commons.geojson.FeatureCollection;
 import com.mapbox.services.commons.geojson.Point;
 
 import java.util.ArrayList;
@@ -198,6 +200,15 @@ public class RCTMGLMapViewManager extends AbstractEventEmitter<RCTMGLMapView> {
         }
     }
 
+    @ReactProp(name="visibleCoordinateBounds")
+    public void setVisibleCoordinateBounds(RCTMGLMapView mapView, String featureJSONStr) {
+        FeatureCollection collection = FeatureCollection.fromJson(featureJSONStr);
+        LatLngBounds bounds = GeoJSONUtils.toLatLngBounds(collection);
+        if (bounds != null) {
+            mapView.setReactVisibleCoordinateBounds(bounds);
+        }
+    }
+
     @ReactProp(name="showUserLocation")
     public void setShowUserLocation(RCTMGLMapView mapView, boolean showUserLocation) {
         mapView.setReactShowUserLocation(showUserLocation);
@@ -243,6 +254,7 @@ public class RCTMGLMapViewManager extends AbstractEventEmitter<RCTMGLMapView> {
     public static final int METHOD_GET_ZOOM = 8;
     public static final int METHOD_GET_CENTER = 9;
     public static final int METHOD_SET_HANDLED_MAP_EVENTS = 10;
+    public static final int METHOD_SHOW_ATTRIBUTION = 11;
 
     @Nullable
     @Override
@@ -258,6 +270,7 @@ public class RCTMGLMapViewManager extends AbstractEventEmitter<RCTMGLMapView> {
                 .put("getZoom", METHOD_GET_ZOOM)
                 .put("getCenter", METHOD_GET_CENTER)
                 .put( "setHandledMapChangedEvents", METHOD_SET_HANDLED_MAP_EVENTS)
+                .put("showAttribution", METHOD_SHOW_ATTRIBUTION)
                 .build();
     }
 
@@ -314,6 +327,9 @@ public class RCTMGLMapViewManager extends AbstractEventEmitter<RCTMGLMapView> {
                     }
                     mapView.setHandledMapChangedEvents(eventsArray);
                 }
+                break;
+            case METHOD_SHOW_ATTRIBUTION:
+                mapView.showAttribution();
                 break;
         }
     }
