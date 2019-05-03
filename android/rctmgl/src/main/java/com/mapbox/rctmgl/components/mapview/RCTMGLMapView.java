@@ -988,10 +988,17 @@ public class RCTMGLMapView extends MapView implements
 
     public void getVisibleBounds(String callbackID) {
         AndroidCallbackEvent event = new AndroidCallbackEvent(this, callbackID, EventKeys.MAP_ANDROID_CALLBACK);
-        VisibleRegion region = mMap.getProjection().getVisibleRegion();
 
         WritableMap payload = new WritableNativeMap();
-        payload.putArray("visibleBounds", GeoJSONUtils.fromLatLngBounds(region.latLngBounds));
+
+        try {
+            VisibleRegion region = mMap.getProjection().getVisibleRegion();
+            payload.putArray("visibleBounds", GeoJSONUtils.fromLatLngBounds(region.latLngBounds));
+        }
+        catch (Exception exception) {
+            exception.printStackTrace();
+        }
+
         event.setPayload(payload);
 
         mManager.handleEvent(event);
@@ -1283,8 +1290,13 @@ public class RCTMGLMapView extends MapView implements
         properties.putBoolean("animated", mCameraChangeTracker.isAnimated());
         properties.putBoolean("isUserInteraction", mCameraChangeTracker.isUserInteraction());
 
-        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
-        properties.putArray("visibleBounds", GeoJSONUtils.fromLatLngBounds(visibleRegion.latLngBounds));
+        try {
+            VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+            properties.putArray("visibleBounds", GeoJSONUtils.fromLatLngBounds(visibleRegion.latLngBounds));
+        }
+        catch (Exception exception) {
+            exception.printStackTrace();
+        }
 
         return GeoJSONUtils.toPointFeature(latLng, properties);
     }
